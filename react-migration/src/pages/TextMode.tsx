@@ -1,16 +1,11 @@
 import React, { useState } from 'react';
-import Select from './components/CustomSelect';
-import { useBluetooth } from '../context/BluetoothContext';
 
-export interface TextModeProps {}
-
-// Настройки для текстового режима
 interface TextSettings {
   text: string;
-  speed: number; // 0-100 (скорость)
-  fontSize: number; // Размер шрифта (в условных единицах)
-  textColor: string; // HEX цвет
-  blinkInterval: number; // Частота мигания текста (0 = disabled)
+  speed: number;
+  fontSize: number;
+  textColor: string;
+  blinkInterval: number;
 }
 
 const initialSettings: TextSettings = {
@@ -33,23 +28,14 @@ const colors = [
 ];
 
 export default function TextMode() {
-  const { connect } = useBluetooth();
-
   const [settings, setSettings] = useState<TextSettings>(initialSettings);
 
   async function handleSendCommand(event: React.FormEvent) {
     event.preventDefault();
-    
-    // Формирование команды для устройства
-    const encoder = new TextEncoder();
-    const commandData = `0${settings.text.padEnd(15, ' ')}`.substring(0, 23).split('').map(char => char.charCodeAt(0));
-    
-    console.log('Sending text command:', settings.text);
-    
-    // Здесь будет отправка команды через BluetoothTerminal
+
     if (bluetoothTerminal && bluetoothTerminal.send) {
       try {
-        await bluetoothTerminal.send(commandData);
+        await bluetoothTerminal.send(`0${settings.text.padEnd(15, ' ')}`.substring(0, 23).split('').map(c => c.charCodeAt(0)).join(''));
       } catch (error) {
         console.error('Error sending command:', error);
       }
@@ -80,7 +66,6 @@ export default function TextMode() {
       </h2>
 
       <form onSubmit={handleSendCommand} className="w-full max-w-2xl space-y-6">
-        {/* Текстовый ввод */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">Текст дисплея</p>
           <textarea
@@ -93,7 +78,6 @@ export default function TextMode() {
           />
         </div>
 
-        {/* Цвет текста */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">Цвет текста</p>
           <input
@@ -117,7 +101,6 @@ export default function TextMode() {
           </div>
         </div>
 
-        {/* Скорость прокрутки */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">Скорость текста: {settings.speed}%</p>
           <input
@@ -130,7 +113,6 @@ export default function TextMode() {
           />
         </div>
 
-        {/* Размер шрифта */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">Размер шрифта: {settings.fontSize}</p>
           <input
@@ -143,7 +125,6 @@ export default function TextMode() {
           />
         </div>
 
-        {/* Мигание текста */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">Интервал мигания: {settings.blinkInterval}ms</p>
           <input

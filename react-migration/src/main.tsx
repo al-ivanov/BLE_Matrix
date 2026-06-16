@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App, { AppProps } from './App';
+import App from './App';
 import BluetoothTerminal from '../utils/bluetooth-terminal';
 
 const bluetoothTerminal = new BluetoothTerminal();

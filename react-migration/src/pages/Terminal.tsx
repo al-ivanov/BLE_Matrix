@@ -1,7 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useBluetooth } from '../context/BluetoothContext';
-
-export interface TerminalProps {}
+import React, { useState } from 'react';
 
 interface LogEntry {
   id: string;
@@ -16,12 +13,9 @@ const DEFAULT_LOGS: LogEntry[] = [
 ];
 
 export default function Terminal() {
-  const { connect, disconnect, isConnected } = useBluetooth();
-  
   const [logs, setLogs] = useState<LogEntry[]>(DEFAULT_LOGS);
   const [inputValue, setInputValue] = useState('');
 
-  // Отрисовка цветов для log типов
   const getColorForType = (type: LogEntry['type']): string => {
     switch (type) {
       case 'in': return 'text-green-400';
@@ -32,7 +26,6 @@ export default function Terminal() {
     }
   };
 
-  // Добавление нового log entry
   const addLog = (type: LogEntry['type'], message: string) => {
     setLogs(prev => [...prev, {
       id: Date.now().toString(),
@@ -42,37 +35,31 @@ export default function Terminal() {
     }]);
   };
 
-  // Обработка отправки команды
   const handleSendCommand = async (event: React.FormEvent) => {
     event.preventDefault();
-    
+
     if (!inputValue.trim()) return;
-    
+
     addLog('out', `> ${inputValue}`);
-    
+
     try {
       if (bluetoothTerminal && bluetoothTerminal.send) {
-        const commandData = typeof inputValue === 'string' 
-          ? new TextEncoder().encode(inputValue)
-          : new Uint8Array([...inputValue].map(c => c.charCodeAt(0)));
-        
-        await bluetoothTerminal.send(commandData);
+        await bluetoothTerminal.send(inputValue);
         addLog('info', `Command sent: ${inputValue}`);
       } else {
-        addLog('error', 'BluetoothTerminal не инициализирован');
+        addLog('error', 'Bluetooth не подключен');
       }
     } catch (error) {
       addLog('error', `Ошибка отправки: ${(error as Error).message || String(error)}`);
     }
-    
+
     setInputValue('');
   };
 
   return (
     <section className="flex flex-col justify-center items-center flex-1 p-4 bg-black">
       <h2 className="text-3xl font-bold text-cyan-400 mb-4 tracking-wider">TERMINAL</h2>
-      
-      {/* Область логов */}
+
       <div className="w-full max-w-2xl h-96 bg-black/80 rounded-lg border-2 border-cyan-700 p-4 overflow-y-auto font-mono text-sm shadow-xl">
         {logs.map((log) => (
           <div key={log.id} className={`${getColorForType(log.type)} mb-2 pb-2 border-b last:border-0 ${
@@ -84,7 +71,6 @@ export default function Terminal() {
         ))}
       </div>
 
-      {/* Форма ввода команды */}
       <form onSubmit={handleSendCommand} className="w-full max-w-2xl mt-4 space-y-3">
         <div className="flex gap-2">
           <input
@@ -96,33 +82,19 @@ export default function Terminal() {
           />
           <button
             type="submit"
-            disabled={!inputValue.trim() || !isConnected}
             className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-lg transition-colors"
           >
             Send
           </button>
         </div>
 
-        {/* Статус соединения */}
         <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-cyan-700">
-          {isConnected ? (
-            <>
-              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-green-400 font-medium">Подключено</span>
-            </>
-          ) : (
-            <>
-              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-red-400 font-medium">Не подключено</span>
-            </>
-          )}
+          <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-green-400 font-medium">Bluetooth не подключен</span>
         </div>
 
-        {/* Подсказки по командам */}
         <div className="bg-black/40 rounded-lg p-3 border border-cyan-700 text-xs space-y-1 max-h-32 overflow-y-auto">
           <p className="text-cyan-60 font-medium mb-2">Подсказки команд:</p>
           <div className="grid grid-cols-2 gap-2">

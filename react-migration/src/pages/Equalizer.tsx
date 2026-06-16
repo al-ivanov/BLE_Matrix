@@ -1,172 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import { useBluetooth } from '../context/BluetoothContext';
+import React, { useState } from 'react';
 import Select from './components/CustomSelect';
 
 const eqTypes = [
-  { value: '0', label: 'Радужные Бары' },
-  { value: '1', label: 'Только верха' },
-  { value: '2', label: 'Синии Бары' },
-  { value: '3', label: 'От центра' },
-  { value: '4', label: 'Переливающиеся бары' },
-  { value: '5', label: 'Гераклит' },
+  { value: '0', label: 'Type 1' },
+  { value: '1', label: 'Type 2' },
+  { value: '2', label: 'Type 3' },
+  { value: '3', label: 'Type 4' },
+  { value: '4', label: 'Type 5' },
+  { value: '5', label: 'Type 6' },
 ];
 
-const samplesList = [
-  { value: '1', label: '256' },
-  { value: '2', label: '512' },
-  { value: '3', label: '1024' },
-];
-
-const barsCount = [
-  { value: '1', label: '8-ми полосный' },
-  { value: '2', label: '16-ти полосный' },
-];
-
-const amplitudeFactors = [
+const multiplicationFactors = [
   { value: '1', label: 'x1' },
-  { value: '2', label: 'x10' },
-  { value: '3', label: 'x100' },
-  { value: '4', label: 'x1000' },
+  { value: '2', label: 'x2' },
+  { value: '3', label: 'x3' },
+  { value: '4', label: 'x4' },
+  { value: '5', label: 'x5' },
+  { value: '6', label: 'x6' },
+  { value: '7', label: 'x7' },
+  { value: '8', label: 'x8' },
+  { value: '9', label: 'x9' },
+  { value: '10', label: 'x10' },
 ];
+
+interface EqualizerSettings {
+  eqType: string;
+}
+
+const initialSettings: EqualizerSettings = {
+  eqType: '0',
+};
 
 export default function Equalizer() {
-  const { bluetoothTerminal } = useBluetooth();
-  const [eqType, setEqType] = useState<string>('0');
-  const [automode, setAutomode] = useState(false);
-  const [samples, setSamples] = useState('1');
-  const [barsCountValue, setBarsCountValue] = useState('1');
-  const [amplitudeFactor, setAmplitudeFactor] = useState('1');
-  const [noise, setNoise] = useState(60);
-  const [eqSensitive, setEqSensitive] = useState(60);
+  const [settings, setSettings] = useState<EqualizerSettings>(initialSettings);
 
-  useEffect(() => {
-    if (bluetoothTerminal) {
-      bluetoothTerminal.send(`?${eqType}`);
-    }
-  }, [eqType, bluetoothTerminal]);
-
-  async function handleSelectEqType(event: React.FormEvent) {
+  async function handleSendCommand(event: React.FormEvent) {
     event.preventDefault();
-    if (bluetoothTerminal && eqType) {
-      await bluetoothTerminal.send(`?${eqType}`);
+
+    console.log('Sending equalizer configuration to device:', settings);
+
+    if (bluetoothTerminal && bluetoothTerminal.send) {
+      try {
+        await bluetoothTerminal.send(`1${settings.eqType}`);
+
+        await bluetoothTerminal.send('!0'); // Auto-change patterns off
+      } catch (error) {
+        console.error('Error sending command:', error);
+      }
     }
   }
 
-  async function handleChangeAutoMode(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = Number(event.target.checked ? '1' : '0');
-    setAutomode(event.target.checked);
-    if (bluetoothTerminal) {
-      await bluetoothTerminal.send(`!${value}`);
-    }
-  }
-
-  async function handleChangeEqSensitive(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = Number(event.target.value);
-    setEqSensitive(value);
-    if (bluetoothTerminal) {
-      await bluetoothTerminal.send(`@${value}`);
-    }
-  }
-
-  async function handleChangeNoise(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = Number(event.target.value);
-    setNoise(value);
-    if (bluetoothTerminal) {
-      await bluetoothTerminal.send(`*${value}`);
-    }
-  }
-
-  async function handleSelectSamples(event: React.FormEvent) {
+  function handleEqTypeChange(event: React.FormEvent<HTMLSelectElement>) {
     event.preventDefault();
-    if (bluetoothTerminal && samples) {
-      await bluetoothTerminal.send(`sA${samples}`);
-    }
-  }
-
-  async function handleSelectBarsCount(event: React.FormEvent) {
-    event.preventDefault();
-    if (bluetoothTerminal && barsCountValue) {
-      await bluetoothTerminal.send(`bB${barsCountValue}`);
-    }
-  }
-
-  async function handleSelectAmplitudeFactor(event: React.FormEvent) {
-    event.preventDefault();
-    if (bluetoothTerminal && amplitudeFactor) {
-      await bluetoothTerminal.send(`aF${amplitudeFactor}`);
-    }
+    setSettings(prev => ({ ...prev, eqType: event.target.value }));
   }
 
   return (
-    <section className="overflow-auto mb-3">
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Тип эквалайзера</p>
-        <Select
-          options={eqTypes}
-          selectedValue={eqType}
-          onSelect={handleSelectEqType}
-        />
-      </div>
+    <section className="flex flex-col justify-center items-center flex-1 p-4 bg-gradient-to-b from-cyan-800 to-blue-900">
+      <h2 className="text-3xl font-bold text-cyan-300 mb-8 tracking-wider">
+        АУДИО ЭКВАЛАЙЗЕР
+      </h2>
 
-      <div className="block w-full">
-        <label>
-          Автоматическое переключение
-        </label>
-        <input
-          type="checkbox"
-          checked={automode}
-          onChange={handleChangeAutoMode}
-        />
-      </div>
+      <form onSubmit={handleSendCommand} className="w-full max-w-3xl space-y-6">
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Тип эквалайзера</p>
+          <Select
+            options={eqTypes}
+            selectedValue={`Type ${Number(settings.eqType) + 1}`}
+            onSelect={handleEqTypeChange}
+          />
+        </div>
 
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Обработка семплов</p>
-        <Select
-          options={samplesList}
-          selectedValue={samples}
-          onSelect={handleSelectSamples}
-        />
-      </div>
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Чувствительность</p>
+          <input
+            type="range"
+            min="-30"
+            max="10"
+            step="1"
+            value={parseInt(settings.eqType)}
+            onChange={(e) => setSettings(prev => ({ ...prev, eqType: e.target.value }))}
+            className="w-full h-2 bg-cyan-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+          />
+          <div className="flex justify-between text-xs text-cyan-50 mt-1">
+            <span>-30 dB</span>
+            <span>+10 dB</span>
+          </div>
+        </div>
 
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Количество столбцов</p>
-        <Select
-          options={barsCount}
-          selectedValue={barsCountValue}
-          onSelect={handleSelectBarsCount}
-        />
-      </div>
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Множитель 1 (Группа 1)</p>
+          <Select
+            options={multiplicationFactors}
+            selectedValue={`x${settings.eqType}`}
+            onSelect={(e) => setSettings(prev => ({ ...prev, eqType: e.currentTarget.value }))}
+          />
+        </div>
 
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Множитель чувствительности</p>
-        <Select
-          options={amplitudeFactors}
-          selectedValue={amplitudeFactor}
-          onSelect={handleSelectAmplitudeFactor}
-        />
-      </div>
+        <button
+          type="submit"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg shadow-blue-500/30"
+        >
+          Применить настройки эквалайзера
+        </button>
+      </form>
 
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Фильтр шумов</p>
-        <input
-          type="range"
-          min="1"
-          max="999"
-          value={noise}
-          onChange={handleChangeNoise}
-        />
-      </div>
-
-      <div className="block w-full">
-        <p className="w-full block text-cyan-50">Чувствительность эквалайзера</p>
-        <input
-          type="range"
-          min="1"
-          max="99"
-          value={eqSensitive}
-          onChange={handleChangeEqSensitive}
-        />
-      </div>
+      <p className="mt-8 text-cyan-60/60 text-xs text-center">
+        Настройте аудиоэквалайзер с 6 типами фильтрации и чувствительностью от -30 до +10 dB
+      </p>
     </section>
   );
 }

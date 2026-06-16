@@ -1,11 +1,6 @@
-import { Link, useLocation } from 'react-router-dom';
-import { routes } from '../utils/commands';
-
-interface FooterProps {}
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
-  const location = useLocation();
-
   return (
     <footer className="w-full px-6 py-2 flex justify-between bg-gradient-to-t from-cyan-900/95 to-transparent fixed bottom-0 z-40 border-t border-cyan-700">
       <Link to="/" className="flex flex-col items-center p-3 cursor-pointer hover:bg-cyan-800/50 rounded transition-colors group">

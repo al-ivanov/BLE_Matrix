@@ -1,15 +1,11 @@
 import React, { useState } from 'react';
 import Select from './components/CustomSelect';
-import { useBluetooth } from '../context/BluetoothContext';
-
-export interface HomeProps {}
 
 interface EffectMode {
   value: string;
   label: string;
 }
 
-// Визуальные режимы
 const modes: EffectMode[] = [
   { value: '0', label: 'Text Mode' },
   { value: '1', label: 'Equalizer' },
@@ -24,7 +20,6 @@ const modes: EffectMode[] = [
   { value: '10', label: 'Fireflies' },
 ];
 
-// Эффекты для слоя наложения
 const overlayEffects = [
   { value: '0', label: 'None' },
   { value: '1', label: 'Breathing' },
@@ -32,25 +27,15 @@ const overlayEffects = [
   { value: '3', label: 'Rainbow Mode' },
 ];
 
-// Типы для select компонентов
-interface SelectOption {
-  value: string;
-  label: string;
-}
-
 export default function Home() {
-  const bluetoothTerminal = undefined as any; // Будет injected через context
-  const { connect } = useBluetooth();
-
   const [mode, setMode] = useState<EffectMode>(modes[0]);
   const [overlayEffect, setOverlayEffect] = useState<EffectMode>(overlayEffects[0]);
   const [amplitude, setAmplitude] = useState<string>('60');
 
   async function handleSelectMode(event: React.FormEvent) {
     event.preventDefault();
-    // Отправка команды на устройство
     console.log(`Switching to mode: ${mode.value}`);
-    
+
     if (bluetoothTerminal && bluetoothTerminal.send) {
       try {
         await bluetoothTerminal.send(`$${mode.value}`);
@@ -63,7 +48,7 @@ export default function Home() {
   async function handleSelectOverlay(event: React.FormEvent) {
     event.preventDefault();
     console.log(`Switching to overlay effect: ${overlayEffect.value}`);
-    
+
     if (bluetoothTerminal && bluetoothTerminal.send) {
       try {
         await bluetoothTerminal.send(`\${overlayEffect.value}`);
@@ -76,7 +61,7 @@ export default function Home() {
   async function handleAmplitudeChange(event: React.ChangeEvent<HTMLInputElement>) {
     const newAmplitude = event.target.value;
     setAmplitude(newAmplitude);
-    
+
     if (bluetoothTerminal && bluetoothTerminal.send) {
       try {
         await bluetoothTerminal.send(`@${newAmplitude}`);
@@ -91,9 +76,8 @@ export default function Home() {
       <h2 className="text-3xl font-bold text-cyan-300 mb-8 tracking-wider">
         ВЫБЕРИТЕ РЕЖИМ
       </h2>
-      
+
       <div className="w-full max-w-2xl space-y-6">
-        {/* Выбор основного режима */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">
             Тип режима (Visual Mode)
@@ -106,7 +90,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Выбор overlay эффекта */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">
             Эффект наложения (Overlay)
@@ -119,7 +102,6 @@ export default function Home() {
           />
         </div>
 
-        {/* Настройка яркости */}
         <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
           <p className="text-cyan-50 text-sm mb-3 font-medium">
             Яркость эффекта: {amplitude}%
