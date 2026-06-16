@@ -1,60 +1,144 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useBluetooth } from '../context/BluetoothContext';
 
+export interface TerminalProps {}
+
 interface LogEntry {
-  type: 'in' | 'out' | 'error';
+  id: string;
+  type: 'in' | 'out' | 'error' | 'info';
+  timestamp: number;
   message: string;
 }
 
+const DEFAULT_LOGS: LogEntry[] = [
+  { id: '1', type: 'info', timestamp: Date.now(), message: 'Terminal initialized' },
+  { id: '2', type: 'info', timestamp: Date.now() + 100, message: 'Ready to send commands' },
+];
+
 export default function Terminal() {
-  const { bluetoothTerminal } = useBluetooth();
-  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const { connect, disconnect, isConnected } = useBluetooth();
+  
+  const [logs, setLogs] = useState<LogEntry[]>(DEFAULT_LOGS);
   const [inputValue, setInputValue] = useState('');
 
-  function logToTerminal(message: string, type: 'in' | 'out' | 'error' = 'out'): void {
-    setLogs(prev => [...prev, { type, message }]);
-  }
-
-  async function send(data: string): Promise<void> {
-    if (!bluetoothTerminal) return;
-    
-    bluetoothTerminal.send(data)
-      .then(() => logToTerminal(data, 'out'))
-      .catch((error: any) => logToTerminal(error.toString(), 'error'));
-  }
-
-  function handleReceive(data: string): void {
-    if (!bluetoothTerminal) return;
-    bluetoothTerminal.receive = (d: string) => {
-      console.log('data', d);
-      logToTerminal(d, 'in');
-    };
-    
-    console.log('data', data);
-    logToTerminal(data, 'in');
-  }
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (inputValue && bluetoothTerminal) {
-      await send(inputValue);
-      setInputValue('');
+  // Отрисовка цветов для log типов
+  const getColorForType = (type: LogEntry['type']): string => {
+    switch (type) {
+      case 'in': return 'text-green-400';
+      case 'out': return 'text-blue-400';
+      case 'error': return 'text-red-500';
+      case 'info': return 'text-cyan-400';
+      default: return 'text-white';
     }
-  }
+  };
+
+  // Добавление нового log entry
+  const addLog = (type: LogEntry['type'], message: string) => {
+    setLogs(prev => [...prev, {
+      id: Date.now().toString(),
+      type,
+      timestamp: Date.now(),
+      message,
+    }]);
+  };
+
+  // Обработка отправки команды
+  const handleSendCommand = async (event: React.FormEvent) => {
+    event.preventDefault();
+    
+    if (!inputValue.trim()) return;
+    
+    addLog('out', `> ${inputValue}`);
+    
+    try {
+      if (bluetoothTerminal && bluetoothTerminal.send) {
+        const commandData = typeof inputValue === 'string' 
+          ? new TextEncoder().encode(inputValue)
+          : new Uint8Array([...inputValue].map(c => c.charCodeAt(0)));
+        
+        await bluetoothTerminal.send(commandData);
+        addLog('info', `Command sent: ${inputValue}`);
+      } else {
+        addLog('error', 'BluetoothTerminal не инициализирован');
+      }
+    } catch (error) {
+      addLog('error', `Ошибка отправки: ${(error as Error).message || String(error)}`);
+    }
+    
+    setInputValue('');
+  };
 
   return (
-    <div className="terminal" style={{
-      border: '1px solid rgba(0, 0, 0, 0.12)',
-      borderBottomWidth: '1px',
-      flexGrow: 1,
-      overflow: 'auto',
-      padding: '4px 0'
-    }}>
-      {logs.map((log, index) => (
-        <li key={index} className={log.type}>
-          {log.message}
-        </li>
-      ))}
-    </div>
+    <section className="flex flex-col justify-center items-center flex-1 p-4 bg-black">
+      <h2 className="text-3xl font-bold text-cyan-400 mb-4 tracking-wider">TERMINAL</h2>
+      
+      {/* Область логов */}
+      <div className="w-full max-w-2xl h-96 bg-black/80 rounded-lg border-2 border-cyan-700 p-4 overflow-y-auto font-mono text-sm shadow-xl">
+        {logs.map((log) => (
+          <div key={log.id} className={`${getColorForType(log.type)} mb-2 pb-2 border-b last:border-0 ${
+            log.type === 'error' ? 'text-red-500 bg-red-900/20' : ''
+          }`}>
+            <span className="opacity-50 mr-2">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+            {log.message}
+          </div>
+        ))}
+      </div>
+
+      {/* Форма ввода команды */}
+      <form onSubmit={handleSendCommand} className="w-full max-w-2xl mt-4 space-y-3">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Введите команду (например: $0, @60, ^100)"
+            className="flex-1 bg-black/60 border-2 border-cyan-700 rounded-lg p-3 text-white placeholder-cyan-600 focus:outline-none focus:border-cyan-400 font-mono"
+          />
+          <button
+            type="submit"
+            disabled={!inputValue.trim() || !isConnected}
+            className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-white font-bold px-6 py-3 rounded-lg transition-colors"
+          >
+            Send
+          </button>
+        </div>
+
+        {/* Статус соединения */}
+        <div className="flex items-center gap-2 p-3 bg-black/40 rounded-lg border border-cyan-700">
+          {isConnected ? (
+            <>
+              <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-green-400 font-medium">Подключено</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="text-red-400 font-medium">Не подключено</span>
+            </>
+          )}
+        </div>
+
+        {/* Подсказки по командам */}
+        <div className="bg-black/40 rounded-lg p-3 border border-cyan-700 text-xs space-y-1 max-h-32 overflow-y-auto">
+          <p className="text-cyan-60 font-medium mb-2">Подсказки команд:</p>
+          <div className="grid grid-cols-2 gap-2">
+            <code className="text-cyan-50">$0-$10</code> — выбор режима (0=Text, 1=Eq, 2=Snow и др.)
+            <code className="text-cyan-50">@60</code> — яркость 60%
+            <code className="text-cyan-50">^100</code> — контраст 100
+            <code className="text-cyan-50">&!</code> — запрос конфигурации
+            <code className="text-cyan-50">?</code> — статус кнопки
+            <code className="text-cyan-50">\0</code> — отключить overlay эффект
+          </div>
+        </div>
+      </form>
+
+      <p className="mt-4 text-cyan-60/60 text-xs text-center">
+        Введите команды для устройства в формате ASCII или Uint8Array
+      </p>
+    </section>
   );
 }

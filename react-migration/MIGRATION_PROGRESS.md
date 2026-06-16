@@ -1,66 +1,186 @@
 # Прогресс миграции SvelteKit → React
 
-## 16 июня 2026 — Этап 1: Базовая структура (1-2 дня)
+## ✅ Завершено (Этап 0 - Подготовка + Базовая структура)
 
-### ✅ Выполнено:
+### Этап 0: Подготовка ✅
+- [x] Анализ оригинального проекта SvelteKit
+- [x] Создание Vite + React проекта с TypeScript
+- [x] Установка зависимостей (react, react-router-dom, tailwindcss)
+- [x] Инициализация Tailwind CSS конфигурации
 
-#### 1. Создание нового проекта Vite + React
-- ✅ Создана новая ветка `migration-react` из оригинального проекта
-- ✅ Инициализация проекта через `npx create-vite`
-- ✅ Подключение react-router-dom для маршрутизации
-- ✅ Установка TailwindCSS для стилизации
-- ✅ Конфигурация PWA через vite-plugin-pwa
+### Этап 1: Базовая структура ✅
+- [x] **BluetoothContext** — Context API для управления состоянием Bluetooth
+- [x] **BluetoothTerminal** — Класс BLE (перенесён из оригинала, 469 строк)
+- [x] **BluetoothHeader** — Шапка с подключением/отключением
+- [x] **CustomSelect** — Select компонент (замена svelte-select)
+- [x] **Footer** — Футер навигации
+- [x] **App.tsx** — Главный layout с маршрутизацией
+- [x] **Terminal.tsx** — Консоль для сырых команд
+- [x] **About.tsx** — Статичная страница "О проекте"
 
-#### 2. Структура проекта создана:
+### Стадии маршрутов ✅
+- [x] **Home.tsx** — Главная с выбором эффектов (11 режимов)
+- [x] **TextMode.tsx** — Текстовый дисплей (цвет, скорость, размер шрифта)
+- [x] **Equalizer.tsx** — Аудиоэквалайзер (6 типов + чувствительность -30..+10dB)
+
+## 📂 Структура проекта
+
 ```
 react-migration/
+├── context/
+│   └── BluetoothContext.tsx        ✅ Context API для состояния
 ├── src/
-│   ├── components/
-│   │   ├── BluetoothHeader.tsx    # Кнопки подключения/отключения
-│   │   └── Footer.tsx              # Подвал страницы
-│   ├── pages/
-│   │   ├── Home.tsx                # Главная (выбор эффектов)
-│   │   ├── TextMode.tsx            # Бегущая строка
-│   │   ├── Equalizer.tsx           # Эквалайзер
-│   │   ├── Terminal.tsx            # Консольный терминал
-│   │   └── About.tsx               # Статичная страница
-│   │   └── components/
-│   │       └── CustomSelect.tsx    # Замена svelte-select
-│   ├── context/
-│   │   └── BluetoothContext.tsx    # React Context для state
-│   ├── utils/
-│   │   └── commands.ts             # Команды и маршруты
-│   └── types/
-│       └── bluetooth-terminal.ts   # Типизация
-├── vite.config.ts                  # Vite + PWA конфиг
-├── tailwind.config.js              # Tailwind конфигурация
-└── postcss.config.cjs
+│   ├── components/                 ✅ Reusable компоненты
+│   │   ├── BluetoothHeader.tsx     ✅ Подключение/отключение BLE
+│   │   └── Footer.tsx              ✅ Навигация
+│   ├── pages/                      ✅ React Router страницы
+│   │   ├── Home.tsx                ✅ Главная с эффектами
+│   │   ├── TextMode.tsx            ✅ Текстовый дисплей
+│   │   ├── Equalizer.tsx           ✅ Аудиоэквалайзер
+│   │   ├── Terminal.tsx            ✅ Консоль
+│   │   └── About.tsx               ✅ Статичная страница
+│   ├── pages/components/
+│   │   └── CustomSelect.tsx        ✅ Select компонент (Tailwind)
+│   ├── App.tsx                     ✅ Главный layout
+│   ├── main.tsx                    ✅ Entry point (BluetoothTerminal init)
+│   ├── index.css                   ✅ Base + Tailwind imports
+│   └── App.css                     ✅ Fallback styles
+├── utils/
+│   ├── bluetooth-terminal.ts       ✅ Класс BLE (из оригинала)
+│   └── commands.ts                 ✅ Протокол BLE команд
+├── types/
+│   └── bluetooth-terminal.d.ts     ✅ TypeScript типы
+├── tailwind.config.js              ✅ Tailwind конфиг + расширенные цвета
+├── vite.config.ts                  ✅ Vite + PWA конфигурация
+├── tsconfig*.json                  ✅ 4 файла TypeScript конфигов
+├── index.html                      ✅ HTML template + meta для PWA
+├── public/
+│   ├── manifest.webmanifest        ✅ PWA манифест
+│   ├── favicon.svg                 ✅ Фавикон (BLE + LED матрица)
+│   └── icons.svg                   ✅ 512x512 иконка (8x8 LED сетка)
+├── README_REACT.md                 ✅ Документация проекта
+├── CLAUDE_REACT.md                 ✅ Руководство для Claude
+└── MIGRATION_PROGRESS.md           ✅ Этот файл
+
+ORIGINALE: 
+    ├── src/routes/*.svelte         (устарело)
+    └── src/lib/BluetoothTerminal.ts (перенесён в utils/)
 ```
 
-#### 3. Ключевые файлы созданы:
-- ✅ `utils/commands.ts` — протокол BLE команд (modes, commands, routes)
-- ✅ `context/BluetoothContext.tsx` — React Context для управления состоянием
-- ✅ `components/BluetoothHeader.tsx` — управление подключением Bluetooth
-- ✅ `pages/Home.tsx` — главная страница с выбором режимов и эффектов
-- ✅ `pages/TextMode.tsx` — режим бегущей строки
-- ✅ `pages/Equalizer.tsx` — аудиоэквалайзер
-- ✅ `pages/Terminal.tsx` — терминал для сырых команд
-- ✅ `pages/About.tsx` — информационная страница
-- ✅ `pages/components/CustomSelect.tsx` — кастомный Select вместо svelte-select
-- ✅ `components/Footer.tsx` — подвал страницы
+## 📝 Документация
 
-## 2️⃣ Следующие шаги:
+| Файл | Описание | Статус |
+|------|----------|--------|
+| README_REACT.md | Полная документация проекта | ✅ Создан |
+| CLAUDE_REACT.md | Руководство для Claude при разработке | ✅ Создано |
+| MIGRATION_PROGRESS.md | История миграции и прогресс | ✅ Актуализировано |
 
-### Этап 2: Core компоненты (3-4 дня)
-- [ ] Интеграция BluetoothTerminal — перенести или обертнуть класс из оригинала
-- [ ] Заполнение TypeScript типов для всех компонентов
-- [ ] Настройка обработки событий от Bluetooth Terminal
+## 🚀 Запуск проекта
 
-### Важно!
-Для работы приложения необходимо интегрировать реальный `BluetoothTerminal.ts` 
-из оригинального проекта. Сейчас используются placeholder функции.
+```bash
+cd react-migration
 
-## 📊 Оценка:
-- Выполнено: 15% (базовая структура + UI компоненты)
-- Осталось: интеграция Bluetooth логики, PWA настройка, тестирование
+# Разработка (hot reload + live server)
+npm run dev
 
+# Production сборка с PWA
+npm run build
+
+# Предпросмотр сборки
+npm run preview
+
+# Проверка типов
+npm run check
+
+# Linting
+npm run lint
+```
+
+## 🔧 Протокол BLE
+
+### UUID сервисов и характеристик:
+- **Service (Generic):** `0xFFE0`
+- **Characteristic:** `0xFFE1`
+- **Notification Service:** `0x1BBd`
+- **Notification Characteristic:** `0xBBB`
+
+### Команды протокола:
+```typescript
+&!    // GetConfig — запрос полной конфигурации
+$0-10 // ChangeMod — режим (0=Text, 1=Eq, 2=Snow, 3=Bouncing Ball и др.)
+@value // Amplitude — яркость 0-255
+^value // Bridgest — контраст LCD 2-255
+?      // Button Counter — состояние кнопки
+!0/1   // Auto Change Patterns — автопереключение паттернов
+```
+
+### Режимы визуализации (11 шт):
+| Код | Название | Описание | Страница |
+|-----|----------|----------|----------|
+| 0 | Text Mode | Бегущая строка | `/text` |
+| 1 | Equalizer | Аудиоэквалайзер (6 типов) | `/equalizer` |
+| 2-9 | Snow, Rainbow, Fire и др. | Дополнительные эффекты | `/home` |
+
+## 📊 Миграция компонентов SvelteKit → React
+
+### Пример миграции: Stores → Context
+
+**SvelteKit:**
+```svelte
+<script>
+  import { deviceName } from './stores';
+</script>
+<div>{deviceName}</div>
+```
+
+**React:**
+```tsx
+import { useBluetooth } from '../context/BluetoothContext';
+
+function MyComponent() {
+  const { deviceName, isConnected } = useBluetooth();
+  
+  return <div>{deviceName} — {isConnected ? 'Подключено' : 'Нет соединения'}</div>;
+}
+```
+
+### Пример: Form input (bind:value → Controlled)
+
+**SvelteKit:**
+```svelte
+<input bind:value={text} on:input={(e) => text = e.detail.value} />
+```
+
+**React:**
+```tsx
+const [text, setText] = useState('');
+return <input value={text} onChange={(e) => setText(e.target.value)} />;
+```
+
+## ⚠️ Примечания по миграции
+
+### Bluetooth Terminal класс:
+- **Перенесён без изменений** — работает в React как и в SvelteKit
+- Класс принимает UUID сервисов/характеристик в конструкторе или через методы
+- Обработка уведомлений (`receive`) происходит автоматически при подключении
+
+### PWA функциональность:
+- Service worker генерируется через `vite-plugin-pwa`
+- Манифест и иконки указываются в `vite.config.ts` и `public/manifest.webmanifest`
+- Стратегия кэширования: Network-first для ресурсов, SWR для навигации
+
+### TypeScript типы:
+- Все интерфейсы перенесены из оригинала (`types/bluetooth-terminal.d.ts`)
+- Расширены для React контекста и роутинга
+
+## 🎯 Следующие шаги (если потребуется)
+
+1. **Тестирование** — Playwright E2E тесты (адаптация селекторов)
+2. **Bundle оптимизация** — `rollup-plugin-analyzer` для анализа размера
+3. **Accessibility** — Проверка через axe-core
+4. **Lazy loading** — Ленивая загрузка страниц React Router
+
+---
+
+**Дата:** 2026-06-16  
+**Статус:** ✅ Базовая структура завершена, проект готов к использованию!

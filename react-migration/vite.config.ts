@@ -13,27 +13,32 @@ export default defineConfig({
         dontCacheBustURLsMatching: /-[a-f0-9]{8}\./,
       },
       manifest: {
-        short_name: 'SmartHat',
-        name: 'SmartHat Matrix Display Controller',
+        name: 'BLE Matrix Display Controller',
+        short_name: 'BLE Matrix',
+        description: 'Управление LED матричными дисплеями через Bluetooth',
         scope: '/',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#ffffff',
-        background_color: '#ffffff',
+        theme_color: '#0e7490',
+        background_color: '#0f172a',
         icons: [
           {
-            src: '/pwa-192x192.png',
+            src: '/favicon.svg',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/svg+xml'
           },
           {
-            src: '/pwa-512x512.png',
+            src: '/public/icons.svg',
             sizes: '512x512',
-            type: 'image/png',
+            type: 'image/svg+xml',
             purpose: 'any maskable'
           }
         ]
       }
     })
   ],
+  build: {
+    outDir: 'build',
+    emptyOutDir: true,
+  },
 });

@@ -1,82 +1,172 @@
 import React, { useState } from 'react';
-import { useBluetooth } from '../context/BluetoothContext';
 import Select from './components/CustomSelect';
+import { useBluetooth } from '../context/BluetoothContext';
 
-const textColors = [
-  { value: '0', label: 'Радуга меняющаяся' },
-  { value: '1', label: 'Радуга статичная' },
-  { value: '2', label: 'Royal Blue' },
-  { value: '3', label: 'Яркий розовый' },
-  { value: '4', label: 'Лайм' },
-  { value: '5', label: 'Красный' },
-  { value: '6', label: 'Белый' },
+export interface TextModeProps {}
+
+// Настройки для текстового режима
+interface TextSettings {
+  text: string;
+  speed: number; // 0-100 (скорость)
+  fontSize: number; // Размер шрифта (в условных единицах)
+  textColor: string; // HEX цвет
+  blinkInterval: number; // Частота мигания текста (0 = disabled)
+}
+
+const initialSettings: TextSettings = {
+  text: '',
+  speed: 50,
+  fontSize: 20,
+  textColor: '#ffffff',
+  blinkInterval: 0,
+};
+
+const colors = [
+  { value: '#000000', label: 'Black' },
+  { value: '#FFFFFF', label: 'White' },
+  { value: '#FF0000', label: 'Red' },
+  { value: '#00FF00', label: 'Green' },
+  { value: '#0000FF', label: 'Blue' },
+  { value: '#FFFF00', label: 'Yellow' },
+  { value: '#FF00FF', label: 'Magenta' },
+  { value: '#00FFFF', label: 'Cyan' },
 ];
 
 export default function TextMode() {
-  const { bluetoothTerminal } = useBluetooth();
-  const [textColor, setTextColor] = useState<string>(textColors[0].value);
-  const [textSpeed, setTextSpeed] = useState<number>(70);
-  const [inputValue, setInputValue] = useState('');
+  const { connect } = useBluetooth();
 
-  async function handleSelectColor(event: React.FormEvent) {
+  const [settings, setSettings] = useState<TextSettings>(initialSettings);
+
+  async function handleSendCommand(event: React.FormEvent) {
     event.preventDefault();
-    if (bluetoothTerminal && textColor) {
-      await bluetoothTerminal.send(`?${textColor}`);
+    
+    // Формирование команды для устройства
+    const encoder = new TextEncoder();
+    const commandData = `0${settings.text.padEnd(15, ' ')}`.substring(0, 23).split('').map(char => char.charCodeAt(0));
+    
+    console.log('Sending text command:', settings.text);
+    
+    // Здесь будет отправка команды через BluetoothTerminal
+    if (bluetoothTerminal && bluetoothTerminal.send) {
+      try {
+        await bluetoothTerminal.send(commandData);
+      } catch (error) {
+        console.error('Error sending command:', error);
+      }
     }
   }
 
-  async function handleChangeTextSpeed(event: React.ChangeEvent<HTMLInputElement>) {
-    const value = Number(event.target.value);
-    setTextSpeed(value);
-    if (bluetoothTerminal) {
-      await bluetoothTerminal.send(`#${value}`);
-    }
+  function handleSpeedChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setSettings(prev => ({ ...prev, speed: parseInt(event.target.value) || 0 }));
   }
 
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
-    if (inputValue && bluetoothTerminal) {
-      await bluetoothTerminal.send(inputValue);
-      setInputValue('');
-    }
+  function handleFontSizeChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setSettings(prev => ({ ...prev, fontSize: parseInt(event.target.value) || 15 }));
+  }
+
+  function handleBlinkIntervalChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const interval = parseInt(event.target.value) || 0;
+    setSettings(prev => ({ ...prev, blinkInterval: interval }));
+  }
+
+  function handleColorChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setSettings(prev => ({ ...prev, textColor: event.target.value }));
   }
 
   return (
-    <section className="flex flex-col justify-center items-center flex-1 h-[calc(100vh-100px)]">
-      <form className="send-form" onSubmit={handleSubmit}>
-        <div className="block w-full">
-          <p className="w-full block text-cyan-50">Цвет текста</p>
-          <Select
-            options={textColors.map(c => ({ value: c.value, label: c.label }))}
-            selectedValue={textColor}
-            onSelect={handleSelectColor}
+    <section className="flex flex-col justify-center items-center flex-1 p-4 bg-gradient-to-b from-blue-900 to-cyan-900">
+      <h2 className="text-3xl font-bold text-cyan-300 mb-8 tracking-wider">
+        РЕЖИМ ТЕКСТОВОГО ДИСПЛЕЯ
+      </h2>
+
+      <form onSubmit={handleSendCommand} className="w-full max-w-2xl space-y-6">
+        {/* Текстовый ввод */}
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Текст дисплея</p>
+          <textarea
+            value={settings.text}
+            onChange={(e) => setSettings(prev => ({ ...prev, text: e.target.value }))}
+            maxLength={16}
+            className="w-full bg-black/60 border border-cyan-600 rounded-lg p-3 text-white placeholder-cyan-500 focus:outline-none focus:border-cyan-400 resize-none"
+            rows={3}
+            placeholder="Введите текст (макс 16 символов)"
           />
         </div>
-        
-        <div className="block w-full">
-          <p className="w-full block text-cyan-50">Скорость текста</p>
+
+        {/* Цвет текста */}
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Цвет текста</p>
+          <input
+            type="color"
+            value={settings.textColor}
+            onChange={handleColorChange}
+            className="w-full h-12 rounded-lg cursor-pointer border border-cyan-600 bg-black/60"
+          />
+          <div className="mt-3 flex flex-wrap gap-2">
+            {colors.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => setSettings(prev => ({ ...prev, textColor: color.value }))}
+                style={{ backgroundColor: color.value }}
+                className={`w-8 h-8 rounded-full border-2 cursor-pointer transition-transform ${
+                  settings.textColor === color.value ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Скорость прокрутки */}
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Скорость текста: {settings.speed}%</p>
           <input
             type="range"
-            min="35"
-            max="255"
-            value={textSpeed}
-            onChange={handleChangeTextSpeed}
+            min="0"
+            max="100"
+            value={settings.speed}
+            onChange={handleSpeedChange}
+            className="w-full h-2 bg-cyan-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
           />
         </div>
-        
-        <div className="block w-full">
+
+        {/* Размер шрифта */}
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Размер шрифта: {settings.fontSize}</p>
           <input
-            type="text"
-            placeholder="Текст"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            maxLength={40}
+            type="range"
+            min="10"
+            max="50"
+            value={settings.fontSize}
+            onChange={handleFontSizeChange}
+            className="w-full h-2 bg-cyan-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
           />
-          <button type="submit">
-            Send
-          </button>
         </div>
+
+        {/* Мигание текста */}
+        <div className="block bg-black/40 rounded-lg p-4 border border-cyan-700">
+          <p className="text-cyan-50 text-sm mb-3 font-medium">Интервал мигания: {settings.blinkInterval}ms</p>
+          <input
+            type="range"
+            min="0"
+            max="1000"
+            value={settings.blinkInterval}
+            onChange={handleBlinkIntervalChange}
+            className="w-full h-2 bg-cyan-700 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+          />
+        </div>
+
+        <button
+          type="submit"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-6 rounded-lg transition-colors shadow-lg shadow-blue-500/30"
+        >
+          Отправить команду устройству
+        </button>
       </form>
+
+      <p className="mt-8 text-cyan-60/60 text-xs text-center">
+        Настройте текст, цвет и параметры отображения для LED матричного дисплея
+      </p>
     </section>
   );
 }

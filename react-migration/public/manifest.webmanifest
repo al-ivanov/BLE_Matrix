@@ -1,0 +1,41 @@
+{
+  "name": "BLE Matrix Display Controller",
+  "short_name": "BLE Matrix",
+  "description": "Управление LED матричными дисплеями через Bluetooth Low Energy",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#0e7490",
+  "scope": "/",
+  "lang": "ru-RU",
+  "categories": ["utilities", "lifestyle"],
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/public/icons.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "share_target": {
+    "action": "/",
+    "method": "POST",
+    "params": [
+      {
+        "name": "title",
+        "application_name": "BLE Matrix",
+        "application_name_fallback": "BLE Matrix"
+      }
+    ]
+  },
+  "iarc_rating_id": "",
+  "prefer_related_applications": false,
+  "related_applications": []
+}

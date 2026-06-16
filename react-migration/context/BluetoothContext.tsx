@@ -1,34 +1,81 @@
-import React, { createContext, useContext, useState } from 'react';
-import type { BluetoothTerminal } from '../../utils/bluetooth-terminal';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export interface BluetoothState {
+interface BluetoothState {
   deviceName: string;
+  isConnected: boolean;
+  config?: any;
 }
 
-export interface BluetoothContextType extends BluetoothState {
+interface BluetoothContextType extends BluetoothState {
   setDeviceName: (name: string) => void;
-  bluetoothTerminal: BluetoothTerminal | null;
-  setBluetoothTerminal: (terminal: BluetoothTerminal | null) => void;
+  connect: () => Promise<void>;
+  disconnect: () => void;
 }
 
 const BluetoothContext = createContext<BluetoothContextType | undefined>(undefined);
 
-export function BluetoothProvider({ 
-  children,
-  bluetoothTerminal 
-}: { 
-  children: React.ReactNode;
+export interface BluetoothTerminal {
+  connect(): Promise<any>;
+  disconnect(): void;
+  send(data: string): Promise<void>;
+  receive?(data: string): void;
+  getDeviceName(): string;
+}
+
+interface BluetoothContextData {
   bluetoothTerminal: BluetoothTerminal | null;
-}) {
-  const [deviceName, setDeviceName] = useState<string>('kepi');
+  children: React.ReactNode;
+}
+
+export function BluetoothProvider({ bluetoothTerminal, children }: BluetoothContextData) {
+  const [deviceName, setDeviceNameState] = useState('kepi');
+  const [isConnected, setIsConnected] = useState(false);
+  const [config, setConfig] = useState<any>(null);
+
+  const setDeviceName = (name: string) => {
+    setDeviceNameState(name);
+  };
+
+  const connect = async () => {
+    if (!bluetoothTerminal) return;
+    try {
+      await bluetoothTerminal.connect();
+      setIsConnected(true);
+      await bluetoothTerminal.send('&!');
+
+      if (bluetoothTerminal.receive) {
+        bluetoothTerminal.receive = (data: string) => {
+          console.log('Bluetooth response:', data);
+          const trimmedData = data.trim();
+          if (trimmedData.startsWith('$')) {
+            const modeNumber = trimmedData.substring(1);
+            console.log(`Mode switch requested: ${modeNumber}`);
+          } else if (trimmedData.startsWith('@')) {
+            const amplitudeValue = parseFloat(trimmedData.substring(1));
+            setConfig(prev => ({ ...prev, amplitude: amplitudeValue }));
+          } else if (trimmedData === '?') {
+            console.log('Button counter requested');
+          } else if (trimmedData === '^' || trimmedData.startsWith('^')) {
+            const bridgestValue = parseInt(trimmedData.substring(1) || '100');
+            setConfig(prev => ({ ...prev, bridgest: bridgestValue }));
+          }
+        };
+      }
+    } catch (error) {
+      console.error('Bluetooth connection error:', error);
+      setIsConnected(false);
+    }
+  };
+
+  const disconnect = () => {
+    if (bluetoothTerminal) {
+      bluetoothTerminal.disconnect();
+      setIsConnected(false);
+    }
+  };
 
   return (
-    <BluetoothContext.Provider value={{ 
-      deviceName, 
-      setDeviceName,
-      bluetoothTerminal,
-      setBluetoothTerminal: (t) => setBluetoothTerminal(t)
-    }}>
+    <BluetoothContext.Provider value={{ deviceName, isConnected, config, setDeviceName, connect, disconnect }}>
       {children}
     </BluetoothContext.Provider>
   );
@@ -36,8 +83,6 @@ export function BluetoothProvider({
 
 export function useBluetooth() {
   const context = useContext(BluetoothContext);
-  if (!context) {
-    throw new Error('useBluetooth must be used within BluetoothProvider');
-  }
+  if (!context) throw new Error('useBluetooth must be used within BluetoothProvider');
   return context;
 }
