@@ -51,7 +51,7 @@ pm2 restart server
 
 Сайт: **https://al-ivanov.github.io/BLE_Matrix/**
 
-Деплой автоматический при push в `main` (workflow `.github/workflows/deploy-pages.yml`).
+Деплой автоматический при push в `master` (workflow `.github/workflows/deploy-pages.yml`).
 
 В настройках репозитория: **Settings → Pages → Build and deployment → GitHub Actions**.
 
