@@ -3,10 +3,13 @@ node_modules
 /build
 /.svelte-kit
 /package
-frontend/node_modules
-frontend/dist
 .env
 .env.*
 !.env.example
 .vercel
 .output
+
+frontend/node_modules
+frontend/dist
+test-results
+playwright-report

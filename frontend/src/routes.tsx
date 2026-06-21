@@ -4,16 +4,20 @@ import { HomePage } from '@/pages/HomePage';
 import { TextPage } from '@/pages/TextPage';
 import { EqualizerPage } from '@/pages/EqualizerPage';
 import { TerminalPage } from '@/pages/TerminalPage';
+import { routerBasename } from '@/lib/basePath';
 
-export const router = createBrowserRouter([
-	{
-		path: '/',
-		element: <RootLayout />,
-		children: [
-			{ index: true, element: <HomePage /> },
-			{ path: 'text', element: <TextPage /> },
-			{ path: 'equalizer', element: <EqualizerPage /> },
-			{ path: 'terminal', element: <TerminalPage /> },
-		],
-	},
-]);
+export const router = createBrowserRouter(
+	[
+		{
+			path: '/',
+			element: <RootLayout />,
+			children: [
+				{ index: true, element: <HomePage /> },
+				{ path: 'text', element: <TextPage /> },
+				{ path: 'equalizer', element: <EqualizerPage /> },
+				{ path: 'terminal', element: <TerminalPage /> },
+			],
+		},
+	],
+	{ basename: routerBasename },
+);

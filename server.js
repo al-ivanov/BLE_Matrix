@@ -1,18 +1,26 @@
-import { handler } from './build/handler.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 
-// SvelteKit production server. For React use server.react.js instead.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dist = path.join(__dirname, 'frontend', 'dist');
 
 const app = express();
 
 app.set('trust proxy', 1);
 
-app.get('/healthcheck', (req, res) => {
-  res.end('ok');
+app.get('/healthcheck', (_req, res) => {
+	res.end('ok');
 });
 
-app.use(handler);
+app.use(express.static(dist, { index: false }));
 
-app.listen(8080, () => {
-  console.log('listening on port 8080');
+app.get('*', (_req, res) => {
+	res.sendFile(path.join(dist, 'index.html'));
+});
+
+const port = Number(process.env.PORT) || 8080;
+
+app.listen(port, () => {
+	console.log(`listening on port ${port}`);
 });
