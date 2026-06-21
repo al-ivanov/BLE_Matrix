@@ -6,7 +6,12 @@
   "main": "./server.js",
   "scripts": {
     "dev": "svelte-kit dev",
+    "dev:react": "npm run dev --prefix frontend",
     "build": "svelte-kit build && node ./pwa.js",
+    "build:react": "npm run build --prefix frontend",
+    "start": "node server.js",
+    "start:react": "node server.react.js",
+    "preview:react": "npm run preview --prefix frontend",
     "package": "svelte-kit package",
     "preview": "svelte-kit preview",
     "prepare": "svelte-kit sync",

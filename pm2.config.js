@@ -2,7 +2,8 @@ export default {
     apps: [
       {
         name: 'server',
-        script: 'server.js',
+        // React SPA: server.react.js | SvelteKit: server.js
+        script: 'server.react.js',
         node_args: [
           '--stack-trace-limit=150',
         ],

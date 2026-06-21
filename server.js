@@ -1,6 +1,8 @@
 import { handler } from './build/handler.js';
 import express from 'express';
 
+// SvelteKit production server. For React use server.react.js instead.
+
 const app = express();
 
 app.set('trust proxy', 1);
